@@ -1,0 +1,39 @@
+* {
+    font-family: sans-serif;
+}
+
+.grid {
+    /* make squares side by side */
+    display: flex;
+    /* make the grid */
+    flex-wrap: wrap;
+    width: 606px;
+    height: 606px;
+}
+
+.square {
+    width: 200px;
+    height: 200px;
+    border: solid black 1px;
+}
+
+.mole {
+    background-image: url('mole.jpg');
+    background-size: cover;
+}
+
+#restartBtn {
+    width: 150px;
+    height: 50px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 16px;
+    border: solid black 1px;
+    background-color: white;
+}
+
+#restartBtn:hover {
+    color: white;
+    background-color: rgb(209, 38, 38);
+    border: solid black 1px;
+}
