@@ -1,5 +1,10 @@
+* {
+  font-family: sans-serif;
+}
+
 .grid {
   position: absolute;
+  margin-top: 80px;
   width: 560px;
   height: 300px;
   border: solid 1px black;
@@ -25,4 +30,18 @@
   height: 20px;
   border-radius: 10px;
   background-color: red;
+}
+
+#startBtn {
+  color: white;
+  background-color: black;
+  border: solid black 0px;
+  height: 30px;
+  width: 150px;
+}
+
+#startBtn:hover {
+  color: black;
+  background-color: white;
+  border: solid black 1px;
 }

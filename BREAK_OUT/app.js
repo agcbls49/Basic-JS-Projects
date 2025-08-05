@@ -1,9 +1,23 @@
-const grid = document.querySelector('.grid');
+function startGame() {
+  const grid = document.querySelector('.grid');
 const blockWidth = 100;
-const blockHeight = 100;
+const blockHeight = 20;
+const scoreDisplay = document.querySelector('#score');
+
 const userStart = [230, 10];
 let currentPosition = userStart;
 const boardWidth = 560;
+const boardHeight = 300;
+
+const ballStart = [270, 40];
+let ballCurrentPosition = ballStart;
+let ballDiameter = 20;
+
+let timerId;
+// direction of the ball upon loading
+let xDirection = -2;
+let yDirection = 2;
+let score = 0;
 
 // create block (because 15 blocks are needed)
 class Block {
@@ -43,7 +57,8 @@ function addBlocks() {
     console.log(blocks[i].bottomLeft)
   }
 }
-addBlocks()
+
+addBlocks();
 
 // add user
 const user = document.createElement('div');
@@ -57,7 +72,13 @@ function drawUser() {
   user.style.bottom = currentPosition[1] + 'px';
 }
 
-// move user
+// draw the ball
+function drawBall() {
+  ball.style.left = ballCurrentPosition[0] + 'px';
+  ball.style.bottom = ballCurrentPosition[1] + 'px';
+}
+
+// move user using left and right arrow keys
 function moveUser(e) {
   switch(e.key) {
     case 'ArrowLeft':
@@ -67,7 +88,7 @@ function moveUser(e) {
       }
       break;
     case 'ArrowRight':
-      if (currentPosition[0] < boardWidth) {
+      if (currentPosition[0] < boardWidth- blockWidth) {
         currentPosition[0] += 10;
         drawUser();
       }
@@ -76,3 +97,92 @@ function moveUser(e) {
 }
 
 document.addEventListener('keydown', moveUser);
+
+// add ball
+const ball = document.createElement('div');
+ball.classList.add('ball');
+drawBall();
+grid.appendChild(ball);
+
+// move the ball
+function moveBall() {
+  // 0 is x axis and 1 is y axis
+  ballCurrentPosition[0] += xDirection;
+  ballCurrentPosition[1] += yDirection;
+  drawBall();
+  checkForCollisions();
+}
+
+timerId = setInterval(moveBall, 30);
+
+// change direction of ball based on collision with the grid walls
+function checkForCollisions() {
+  // check for block collision
+  for (let i = 0; i < blocks.length; i++) {
+    if (
+      (ballCurrentPosition[0] > blocks[i].bottomLeft[0] 
+      && ballCurrentPosition[0] < blocks[i].bottomRight[0]) &&
+      ((ballCurrentPosition[1] + ballDiameter) > blocks[i].bottomLeft[1] 
+      && ballCurrentPosition[1] < blocks[i].topLeft[1]) 
+    )
+      {
+        // if a block is hit by the ball then remove the block from the screen
+        const allBlocks = Array.from(document.querySelectorAll('.block'));
+        allBlocks[i].classList.remove('block');
+        blocks.splice(i, 1);
+        changeDirection();
+        score++;
+        scoreDisplay.innerHTML = score;
+
+        // check for win
+        if(blocks.length === 0){
+          scoreDisplay.innerHTML = 'You Win!';
+          clearInterval(timerId);
+          document.removeEventListener('keydown', moveUser);
+        }
+    }
+  }
+
+  // check for wall collision
+  if (ballCurrentPosition[0] >= (boardWidth - ballDiameter) || ballCurrentPosition[0] <= 0 || ballCurrentPosition[1] >= (boardHeight - ballDiameter))
+  {
+    changeDirection()
+  }
+
+  // check for user collision
+  if
+  (
+    (ballCurrentPosition[0] > currentPosition[0] && ballCurrentPosition[0] < currentPosition[0] + blockWidth) &&
+    (ballCurrentPosition[1] > currentPosition[1] && ballCurrentPosition[1] < currentPosition[1] + blockHeight) 
+  )
+  {
+    changeDirection();
+  }
+
+  // check for game over (when ball collides at the bottom)
+  if(ballCurrentPosition[1] <= 0){
+    clearInterval(timerId);
+    scoreDisplay.innerHTML = 'You Lose!';
+    document.removeEventListener('keydown', moveUser);
+  }
+}
+
+// change direction of ball
+function changeDirection() {
+  if (xDirection === 2 && yDirection === 2) {
+    yDirection = -2;
+    return;
+  }
+  if (xDirection === 2 && yDirection === -2) {    xDirection = -2;
+    return;
+  }
+  if (xDirection === -2 && yDirection === -2) {
+    yDirection = 2;
+    return;
+  }
+  if (xDirection === -2 && yDirection === 2) {
+    xDirection = 2;
+    return;
+  }
+}
+}
