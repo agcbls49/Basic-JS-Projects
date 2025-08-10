@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function draw() {
         for (let i = 0; i < alienInvaders.length; i++) {
-            if (!aliensRemoved.includes(i)) {
+            if (!aliensRemoved.includes(i) && alienInvaders[i] < squares.length) {
                 squares[alienInvaders[i]].classList.add('invader');
             }
         }
@@ -34,7 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function remove() {
         for (let i = 0; i < alienInvaders.length; i++) {
-            squares[alienInvaders[i]].classList.remove('invader');
+            if (alienInvaders[i] < squares.length) {
+                squares[alienInvaders[i]].classList.remove('invader');
+            }
         }
     }
 
@@ -46,16 +48,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function moveShooter(e) {
         squares[currentShooterIndex].classList.remove('shooter');
-        switch(e.key){
-            case 'ArrowLeft': 
-                if(currentShooterIndex % width !== 0) currentShooterIndex-=1;
+
+        const shooterColumn = currentShooterIndex % width;
+        const invaderInColumn = alienInvaders.some(
+            (pos, i) => !aliensRemoved.includes(i) && pos % width === shooterColumn && pos >= currentShooterIndex - width
+        );
+
+        switch(e.key) {
+            case 'ArrowLeft':
+                if(currentShooterIndex % width !== 0 && !invaderInColumn) {
+                    currentShooterIndex -= 1;
+                }
                 break;
-            case 'ArrowRight': 
-                if(currentShooterIndex % width < width - 1) currentShooterIndex+=1;
+            case 'ArrowRight':
+                if(currentShooterIndex % width < width - 1 && !invaderInColumn) {
+                    currentShooterIndex += 1;
+                }
                 break;
         }
+
         squares[currentShooterIndex].classList.add('shooter');
     }
+
 
     function moveInvaders() {
         const leftEdge = alienInvaders[0] % width === 0;
@@ -91,7 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         // collision for when the invaders hit the bottom of the grid
         for(let i = 0; i < alienInvaders.length; i++) {
-            if(alienInvaders[i] > (squares.length)) {
+            if(alienInvaders[i] >= squares.length - width) {
                 resultDisplay.innerHTML = "GAME OVER!";
                 clearInterval(invadersId);
             }
@@ -109,30 +123,38 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentLaserIndex = currentShooterIndex;
 
         function moveLaser() {     
+    squares[currentLaserIndex].classList.remove('laser');
+    currentLaserIndex -= width;
+
+    // if the laser goes off the top of the grid, stop it
+    if (currentLaserIndex < 0) {
+        clearInterval(laserId);
+        return;
+    }
+
+    squares[currentLaserIndex].classList.add('laser');
+
+        // collision check
+        if (squares[currentLaserIndex].classList.contains('invader')) {
             squares[currentLaserIndex].classList.remove('laser');
-            currentLaserIndex -= width;
-            squares[currentLaserIndex].classList.add('laser');
+            squares[currentLaserIndex].classList.remove('invader');
+            squares[currentLaserIndex].classList.add('boom');
 
-            // collision for laser
-            if(squares[currentLaserIndex].classList.contains('invader')) {
-                squares[currentLaserIndex].classList.remove('laser');
-                squares[currentLaserIndex].classList.remove('invader');
-                squares[currentLaserIndex].classList.add('boom');
+            setTimeout(() => {
+                squares[currentLaserIndex].classList.remove('boom');
+            }, 300);
+            clearInterval(laserId);
 
-                // remove red boom when invader is hit
-                setTimeout(() => {
-                    squares[currentLaserIndex].classList.remove('boom', 300);
-                    clearInterval(laserId);
-
-                    // remove invader so it doesn't get redrawn when hit
-                    // remove the alien in the aliens array
-                    const alienRemoved = alienInvaders.indexOf(currentLaserIndex);
+                const alienRemoved = alienInvaders.indexOf(currentLaserIndex);
+                if (alienRemoved !== -1) {
                     aliensRemoved.push(alienRemoved);
-                    results++;
-                    resultDisplay.innerHTML = results;
-                })
+                }
+
+                results++;
+                resultDisplay.innerHTML = results;
             }
         }
+
         switch(e.key) {
             case 'ArrowUp': laserId = setInterval(moveLaser, 100); break;
         }
